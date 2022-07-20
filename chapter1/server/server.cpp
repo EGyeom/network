@@ -1,28 +1,18 @@
-#include <cstdio>
-
-#include <sys/types.h> // open
-#include <sys/stat.h>
-#include <fcntl.h>
-
-#include <unistd.h> // read,write
-#include <sys/socket.h> // socket
-
-#include <arpa/inet.h>
-
-#include <stdlib.h> // atoi
-#include <string.h> // strlen
-
-#include <sys/wait.h>
-#include <signal.h>
+#include <network.h>
 
 int main(int argc, char* argv[])
 {
-    int serv;
-    int clnt;
-    uint32_t serv_addr_len = 0;
-    uint32_t clnt_addr_len = 0;
-    sockaddr_in serv_addr;
-    sockaddr_in clnt_addr;
+#ifdef WIN32
+    WSADATA wsaData;
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData) != 0)
+        error_handling("WSAStartup() error!");
+#endif
+    SOCKET serv;
+    SOCKET clnt;
+    int serv_addr_len = 0;
+    int clnt_addr_len = 0;
+    SOCKADDR serv_addr;
+    SOCKADDR clnt_addr;
     char buf[256] = {0,};
     serv = socket(PF_INET,SOCK_STREAM,0);
 
@@ -30,11 +20,7 @@ int main(int argc, char* argv[])
     serv_addr.sin_family = AF_INET;
     serv_addr.sin_port = htons(atoi(argv[1]));
     serv_addr_len = sizeof(serv_addr);
-    
-    printf("%x\n", serv_addr.sin_addr.s_addr);
-    int option = 1;
-    setsockopt(serv,SOL_SOCKET,SO_REUSEADDR,&option,sizeof(option));
-    
+        
     if(bind(serv,(sockaddr*)&serv_addr,serv_addr_len) == -1)
     {
         printf("bind error\n");
@@ -63,5 +49,6 @@ int main(int argc, char* argv[])
         buf[slength] = 0;
         printf("%s\n", buf); 
     }
+
     return 0;   
 }
